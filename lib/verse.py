@@ -11,12 +11,22 @@ import lib.bible
 class Verse():
     table = "verses"
 
-    def __init__(self, number: int, text: str, chapter: "lib.chapter.Chapter", audio_path: str =""):
+    def __init__(self, number: int, text: str, chapter: "lib.chapter.Chapter", book: Book=None, translation: str=""):
         self.number = number
         self.text = text
         self.chapter = chapter
-        self.audio_path = audio_path
+        self.book = book
+        self.audio_path = None
+        self.translation = translation
+        if translation:
+            self.audio_path = self.get_audio_path()
 
+    def get_audio_path(self):
+        book_ord = str(self.book.ordinal).rzero(2)
+        chapter_number = str(self.chapter.number).rzero(3)
+        verse_number = str(self.number).rzero(3)
+        self.audio_path = f"audio/{self.translation}/{book_ord} {self.book.name}/{self.book.name} {chapter_number}/{self.book.name} {chapter_number} {verse_number}"
+    
     #TODO: Get this to play verses
     def play(self):
         raise Exception("Verse#play not implemented.")
@@ -58,10 +68,11 @@ class Verse():
         return cls.from_row(row)
 
     @classmethod
-    def from_tree_node(cls, verse_tag: ElementTree, chapter: "lib.chapter.Chapter") -> Self:
+    def from_tree_node(cls, verse_tag: ElementTree, chapter: "lib.chapter.Chapter", book: "lib.book.Book", bible: "lib.bible.Bible") -> Self:
         number = verse_tag.attrib["number"]
         text = verse_tag.text
-        return cls.create(number, text, chapter)
+        translation = bible.translation
+        return cls.create(number, text, chapter, book, translation)
 
     @staticmethod
     def from_row(row: Row) -> Self:
