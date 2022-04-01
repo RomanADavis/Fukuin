@@ -22,8 +22,8 @@ class Chapter():
     templates = [
         {
             "name": "Designation -> Summary", 
-            "qfmt": open("./templates/chapter_designation.html").read(), 
-            "afmt": open("./templates/summary.html").read()
+            "qfmt": "{{BookName}} {{ChapterNumber}}\n\n{{type:Summary}}",
+            "afmt": "{{BookName}} {{ChapterNumber}}\n\n<hr id=answer>\n\n{{type:Summary}}",
         }
     ]
 
