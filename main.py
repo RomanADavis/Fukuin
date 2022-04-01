@@ -23,5 +23,6 @@ from lib.testament import Testament
 # TODO: Make an API / library for the bible that doesn't suck.
 
 # Parsing the XML Document
-Bible.initialize_db()
-bible = Bible.from_xml("xml/kjv.xml")
+# Bible.initialize_db()
+# bible = Bible.from_xml("xml/kjv.xml")
+Chapter.package().write_to_file("anki packages/BibleChapterSummaries.apkg")

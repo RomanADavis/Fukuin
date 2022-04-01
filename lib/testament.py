@@ -1,5 +1,4 @@
 from typing import List, Dict, Any
-from typing_extensions import Self
 from xml.etree.ElementTree import ElementTree
 from sqlite3 import Row
 
@@ -50,7 +49,7 @@ class Testament():
     # Necessary because sometimes we'll be saving a new Bible and sometimes
     # we'll be loading it from a database. And sometimes we may be
     # overwriting / editing an exist bible.
-    def create(cls, name: str, bible: "lib.bible.Bible") -> Self:
+    def create(cls, name: str, bible: "lib.bible.Bible") -> "Testament":
         query = f"INSERT INTO {cls.table} (name, bible) VALUES (?, ?)"
         Testament.execute(query, (name, bible.id))
         
@@ -62,7 +61,7 @@ class Testament():
     @classmethod
     # TODO: Maybe make this some sort of LEFT JOIN?
     # Y'know SELECT t.*, b.* FROM testaments LEFT JOIN bibles b ON t.bible = b.id WHRE t.id = ?
-    def read(cls, attributes: Dict[str, Any], bible: "lib.bible.Bible" = None) -> Self:
+    def read(cls, attributes: Dict[str, Any], bible: "lib.bible.Bible" = None) -> "Testament":
         sieve = " ".join([f"{key} = ?" for key in attributes.keys()])
         query = f"SELECT * FROM {cls.table} where {sieve}"
         row = cls.execute(query, attributes.values())
@@ -72,7 +71,7 @@ class Testament():
     # This is sort of copied mindlessly from the update method in book.
     # Might not need this much pagentry; may be justified by later changes. Idk.
     @classmethod
-    def update(cls, id: int, attributes: Dict[str, Any], bible: "lib.bible.Bible" = None) -> Self:
+    def update(cls, id: int, attributes: Dict[str, Any], bible: "lib.bible.Bible" = None) -> "Testament":
         update = " ".join([f"{key} = ?" for key in attributes.keys()])
         query = f"UPDATE {cls.table} SET {update} WHERE id = ?"
 
@@ -83,12 +82,12 @@ class Testament():
     @classmethod
     # Thought about making this more flexible with an attribute object;
     # currently think it's dumb.
-    def delete(cls, id: int) -> Self:
+    def delete(cls, id: int) -> "Testament":
         query = f"DELETE FROM {cls.table} WHERE id = ?"
         row = cls.execute(query, (id,))
 
     @classmethod
-    def from_tree_node(cls, node: ElementTree, bible: "lib.bible.Bible") -> Self:
+    def from_tree_node(cls, node: ElementTree, bible: "lib.bible.Bible") -> "Testament":
         name = node.attrib["name"]
         testament = Testament.create(name, bible)
         
@@ -100,7 +99,7 @@ class Testament():
         return testament
     
     @staticmethod
-    def from_row(row: Row, bible: "lib.bible.Bible" = None) -> Self:
+    def from_row(row: Row, bible: "lib.bible.Bible" = None) -> "Testament":
         if not bible:
             bible = lib.bible.Bible.read({"id": row["bible"]})
         testament = Testament(row["name"], bible)

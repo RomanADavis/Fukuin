@@ -4,6 +4,6 @@ from book import Book
 from chapter import Chapter
 from verse import Verse
 
-class Fukuin()
+class Fukuin():
     pass
 

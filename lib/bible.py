@@ -1,5 +1,3 @@
-from types import NoneType
-from typing_extensions import Self
 import xml.etree.ElementTree as ElementTree
 import sqlite3
 from sqlite3 import Row
@@ -15,12 +13,12 @@ class Bible():
     cursor = connection.cursor()
     table = "bibles"
     
-    def __init__(self, translation: str) -> NoneType:
+    def __init__(self, translation: str) -> None:
         self.translation = translation
         self.ordinal = 0
         self.id = None
 
-    def __iter__(self) -> Self:
+    def __iter__(self) -> "Bible":
         self.ordinal = 0
         return self
 
@@ -37,8 +35,12 @@ class Bible():
         return lib.book.Book.read({"bible": self.id, "ordinal": self.ordinal})
 
     def books(self) -> List[lib.book.Book]:
-        ids = self.cursor.execute(f"SELECT id FROM {self.table} WHERE bible == ?", self.id)
+        ids = self.cursor.execute(f"SELECT id FROM books WHERE bible == ?", self.id)
         return [lib.book.Book.read({"id": id}) for id in ids]
+
+    def chapters(self) -> List[lib.chapter.Chapter]:
+        ids = self.cursor.execute(f"SELECT id FROM chapters WHERE bible == ?", self.id)
+        return [lib.chapter.Chapter.read({"id": id}) for id in ids]
 
     # TODO: Work with slices
     # TODO: Work with book names
@@ -65,7 +67,7 @@ class Bible():
     # Necessary because sometimes we'll be saving a new Bible and sometimes
     # we'll be loading it from a database. And sometimes we may be
     # overwriting / editing an exist bible.
-    def create(cls, translation: str) -> Self:
+    def create(cls, translation: str) -> "Bible":
         query = f"INSERT INTO {cls.table} (translation) VALUES (?)"
         row = cls.execute(query, (translation,))
         
@@ -75,7 +77,7 @@ class Bible():
         return bible
 
     @classmethod
-    def read(cls, attributes: Dict) -> Self:
+    def read(cls, attributes: Dict) -> "Bible":
         sieve = " ".join([f"{key} = ?" for key in attributes.keys()])
         query = f"SELECT * FROM {cls.table} where {sieve}"
         row = cls.execute(query, attributes.values())
@@ -85,7 +87,7 @@ class Bible():
     # This is sort of copied mindlessly from the update method in book.
     # Might not need this much pagentry; may be justified by later changes. Idk.
     @classmethod
-    def update(cls, id: int, attributes: Dict) -> Self:
+    def update(cls, id: int, attributes: Dict) -> "Bible":
         update = " ".join([f"{key} = ?" for key in attributes.keys()])
         query = f"UPDATE {cls.table} SET {update} WHERE id = ?"
 
@@ -96,19 +98,19 @@ class Bible():
     @classmethod
     # Thought about making this more flexible with an attribute object;
     # currently think it's dumb.
-    def delete(cls, id: int) -> Self:
+    def delete(cls, id: int) -> "Bible":
         query = f"DELETE FROM {cls.table} WHERE id = ?"
         return cls.execute(query, (id,)).fetchone()
 
     @classmethod
     # Create a Bible object from an XML file
-    def from_xml(cls, xml_path: str) -> Self:
+    def from_xml(cls, xml_path: str) -> "Bible":
         tree = ElementTree.parse(xml_path)
         root = tree.getroot()
         return cls.from_tree_node(root)
 
     @classmethod
-    def from_tree_node(cls, node: ElementTree, database="db/bible.db") -> Self:
+    def from_tree_node(cls, node: ElementTree, database="db/bible.db") -> "Bible":
         bible = None
         
         cls.database = database
@@ -131,13 +133,13 @@ class Bible():
         return bible
 
     @classmethod
-    def from_row(cls, row: Row) -> Self:
+    def from_row(cls, row: Row) -> "Bible":
         bible = cls(row["translation"])
         bible.id = row["id"]
         return bible
 
     @classmethod
-    def initialize_db(cls):
+    def initialize_db(cls) -> None:
         cls.database = "db/bible.db"
         cls.connection.close()
         os.remove(cls.database)
@@ -147,5 +149,5 @@ class Bible():
         cls.cursor.execute("CREATE TABLE bibles (translation)")
         cls.cursor.execute("CREATE TABLE testaments (name, bible)")
         cls.cursor.execute("CREATE TABLE books (name, ordinal, testament, bible)")
-        cls.cursor.execute("CREATE TABLE chapters (number, book)")
+        cls.cursor.execute("CREATE TABLE chapters (number, book, bible)")
         cls.cursor.execute("CREATE TABLE verses (number,  text, chapter, audio_path)")
