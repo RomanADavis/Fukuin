@@ -31,3 +31,12 @@ def parse_summaries() -> Dict[str, Dict]:
             chapters[book][chapter_number] += line + " "
     chapters[book][chapter_number] = chapters[book][chapter_number].rstrip()
     return chapters
+
+def record_summaries(summaries, book_name):
+    chapters = summaries[book_name]
+    records = []
+
+    for number, summary in chapters.items():
+        records.append({"chapter": number, "summary": summary})
+    
+    return records

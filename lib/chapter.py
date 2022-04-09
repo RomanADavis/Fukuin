@@ -1,12 +1,16 @@
+from operator import index
 from sqlite3 import Row
 from xml.etree.ElementTree import ElementTree
-from typing import Any, Dict, Tuple, List
+from typing import Any, Dict, Tuple
 from genanki import Model, Note, Deck, Package
 from random import randrange
+from pandas import DataFrame, ExcelWriter
+from xlsxwriter import Workbook
+
 import lib.verse
 import lib.book
 import lib.bible
-from lib.parse_summaries import parse_summaries
+from lib.parse_summaries import parse_summaries, record_summaries
 
 class Chapter():
     table = "chapters"
@@ -55,6 +59,57 @@ class Chapter():
         )
 
     @classmethod
+    def book(cls, path="ChapterSummaries.xlsx"):
+        workbook = Workbook(path)
+
+        header_format = workbook.add_format({
+            "text_wrap": True,
+            "bold": True,
+            "valign": "vcenter",
+            "align": "center",
+            "bg_color": "magenta",
+            "font_color": "black"
+        })
+
+        summary_format = workbook.add_format({
+            "text_wrap": True, 
+            "valign": "vcenter"
+            })
+        
+        colors = [
+            {"bg": "black", "fg": "white"},
+            {"bg": "yellow", "fg": "black"},
+            {"bg": "navy", "fg": "white"},
+            {"bg": "brown", "fg": "white"},
+            {"bg": "gray", "fg": "white"},
+            {"bg": "green", "fg": "white"},
+            {"bg": "white", "fg": "black"},
+            {"bg": "orange", "fg": "white"},
+            {"bg": "purple", "fg": "white"},
+            {"bg": "red", "fg": "white"}
+        ]
+
+        for book_name, chapters in cls.summaries.items():
+            records = record_summaries(cls.summaries, book_name)
+            worksheet = workbook.add_worksheet(book_name)
+            worksheet.write(0, 0, "CHAPTER", header_format)
+            worksheet.write(0, 1, "SUMMARY", header_format)
+            for index, record in enumerate(records):
+                number_format = workbook.add_format({
+                    "align": "center", 
+                    "valign": "vcenter", 
+                    "bg_color": colors[index % 10]["bg"], 
+                    "font_color": colors[index % 10]["fg"], 
+                    "bold": True
+                    })
+                worksheet.write(index + 1, 0, record["chapter"], number_format)
+                worksheet.write(index + 1, 1, record["summary"], summary_format)
+            worksheet.set_column(0, 0, 12)
+            worksheet.set_column(1, 1, 100)
+        workbook.close()
+        
+
+    @classmethod
     def decks(cls) -> Deck:
         decks = []
         summaries = parse_summaries()
@@ -68,7 +123,7 @@ class Chapter():
                     model=cls.model,
                     fields=[
                         book,
-                        str(number),
+                        str(number), # Has to be converted to string
                         summary
                     ]
                 ))

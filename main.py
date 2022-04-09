@@ -25,4 +25,5 @@ from lib.testament import Testament
 # Parsing the XML Document
 # Bible.initialize_db()
 # bible = Bible.from_xml("xml/kjv.xml")
-Chapter.package().write_to_file("anki packages/BibleChapterSummaries.apkg")
+# Chapter.package().write_to_file("anki packages/BibleChapterSummaries.apkg")
+Chapter.book()
